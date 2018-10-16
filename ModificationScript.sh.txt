@@ -1,0 +1,744 @@
+#!/bin/bash
+
+
+#backing up config files
+cp /etc/modprobe.d/modprobe.conf /etc/modprobe.d/modprobe.conf.org
+cp /boot/grub/grub.conf /boot/grub/grub.conf.org
+cp /etc/fstab /etc/fstab.org
+cp /etc/sysctl.conf /etc/sysctl.conf.org
+cp /etc/crontab /etc/crontab.org
+cp /etc/selinux/config /etc/selinux/config.org
+cp /etc/chrony.conf /etc/chrony.conf.org
+cp /etc/ntp.conf /etc/ntp.conf.org
+cp /etc/postfix/main.cf /etc/postfix/main.cf.org
+cp /etc/audit/audit.rules /etc/audit/audit.rules.org
+cp /etc/rsyslog.conf /etc/rsyslog.conf.org
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.org
+cp /etc/sysconfig/init /etc/sysconfig/init.org
+cp /etc/pam.d/system-auth /etc/pam.d/system-auth.org
+cp /etc/pam.d/su /etc/pam.d/su.org
+cp /etc/passwd /etc/passwd.org
+cp /etc/group /etc/group.org
+
+
+
+
+echo "install cramfs /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+echo "install freevxfs /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+echo "install jffs2 /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+echo "install hfs /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+echo "install hfsplus /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+echo "install squashfs /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+echo "install udf /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+echo "install vfat /bin/true" >> /etc/modprobe.d/modprobe.conf
+
+
+#mkdir /tmpdir
+#rsync -avX /tmp/* /tmpdir
+#diff -r /tmp /tmpdir/
+#rm -rf /tmp/*
+#echo "tmpfs   /tmp tmpfs   rw,nosuid,nodev,noexec,relatime,size=512m   0 0"  >> /etc/fstab
+#mount -a
+#rsync -avX /tmpdir/* /tmp
+#If all works fine rm -rf /tmpdir/*; rmdir /tmpdir
+
+
+
+#mkdir /vardir
+#rsync -avX /var/* /vardir
+#diff -r /var /vardir/
+#rm -rf /var/*
+#mkfs.ext4 /dev/xvdg1
+#echo "/dev/xvdg1   /var ext4  rw,relatime,data=ordered    0 0"  >> /etc/fstab
+#mount -a
+#rsync -avX /vardir/* /var
+#If all works fine rm -rf /vardir/*; rmdir /vardir
+#mkdir /vartmpdir
+#rsync -avX /var/tmp/* /vartmpdir
+#diff -r /var/tmp/ /vartmpdir/
+#rm -rf /var/tmp/*
+#mkfs.ext4 /dev/xvdg1
+
+#echo "/dev/xvdg1   /var/tmp ext4  rw,nosuid,nodev,noexec,relatime    0 0"  >> /etc/fstab
+#
+#mount -a
+#rsync -avX /vartmpdir/* /var/tmp/
+
+#If all works fine rm -rf /vartmpdir/*; rmdir /vartmpdir
+
+
+
+#mkdir /varlogdir
+#rsync -avX /var/log/* /varlogdir
+#diff -r /var/log/ /varlogdir/
+#rm -rf /var/log/*
+#mkfs.ext4 /dev/xvdh1
+#echo "/dev/xvdh1   /var/log ext4 rw,relatime,data=ordered    0 0"  >> /etc/fstab
+#mount -a
+#rsync -avX /varlogdir/* /var/log/
+#If all works fine rm -rf /varlogdir/*; rmdir /varlogdir"
+#mkdir /varlogauditdir
+#rsync -avX /var/log/audit/* /varlogauditdir
+#diff -r /var/log/audit/ /varlogauditdir/
+#rm -rf /var/log/audit/*
+#mkfs.ext4 /dev/xvdh1
+#echo "/dev/xvdi1    /var/log/audit ext4 rw,relatime,data=ordered    0 0"  >> /etc/fstab
+#mount -a
+#rsync -avX /varlogauditdir/* /var/log/audit/
+#If all works fine rm -rf /varlogauditdir/*; rmdir /varlogauditdir
+#mkdir /varlogauditdir
+#rsync -avX /var/log/audit/* /varlogauditdir
+#diff -r /var/log/audit/ /varlogauditdir/
+#rm -rf /var/log/audit/*
+#mkfs.ext4 /dev/xvdh1
+#echo "/dev/xvdi1    /var/log/audit ext4 rw,relatime,data=ordered    0 0"  >> /etc/fstab
+#mount -a
+#rsync -avX /varlogauditdir/* /var/log/audit/
+#If all works fine rm -rf /varlogauditdir/*; rmdir /varlogauditdir
+
+echo "tmpfs  /dev/shm    tmpfs   rw,nosuid,nodev,noexec,relatime 0 0"  >> /etc/fstab
+
+
+for i in $(df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type d \( -perm -0002 -a ! -perm -1000 \) 2>/dev/null); do echo $i+" adding stickybit"; chmod +t $i ; done
+chkconfig autofs off
+for i in $(grep ^gpgcheck=0 /etc/yum.repos.d/* /etc/yum.conf | cut -d':' -f 1); do sed -i 's/gpgcheck=0/gpgcheck=1/g' $i; done;
+yum install aide -y
+#aide --init
+mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+echo "00 1 * * 6 root /usr/sbin/aide --check" >> /etc/crontab
+chmod 0600 /boot/grub/grub.conf
+chown root:root  /boot/grub/grub.conf
+#/sbin/grub-md5-crypt
+#enter the password
+#copy hashed password
+#vi /boot/grub/grub.conf
+# edit password after timeout=5
+#password --md5 hashedpassword
+sed -i 's/SINGLE=.*/SINGLE=\/sbin\/sulogin/g' /etc/sysconfig/init
+#or if it doesn't exist
+echo "SINGLE=/sbin/sulogin" >> /etc/sysconfig/init
+sed -i 's/PROMPT=.*/PROMPT=no/g' /etc/sysconfig/init
+#or if it doesn't exist
+echo "PROMPT=no" >> /etc/sysconfig/init
+echo "* hard core 0" >> /etc/security/limits.conf
+for i in $(ls /etc/security/limits.d/*); do echo "* hard core 0" >>  $i; done;
+sed -i 's/fs.suid_dumpable.*/fs.suid_dumpable = 0/g'  /etc/sysctl.conf
+sysctl -w fs.suid_dumpable=0
+
+
+echo "kernel.randomize_va_space = 2"  >> /etc/sysctl.conf
+#for i in $(grep "kernel\.randomize_va_space"  /etc/sysctl.d/* | cut -d':' -f 1); do echo "kernel.randomize_va_space = 2" >>  $i; done;
+
+rpm -e prelink
+sed  -i 's/enforcing=0//g' /boot/grub/grub.conf
+sed  -i 's/selinux=0//g' /boot/grub/grub.conf
+sed  -i 's/SELINUX=.*/SELINUX=enforcing/g' /etc/selinux/config
+sed  -i 's/SELINUXTYPE=.*/SELINUXTYPE=targeted/g' /etc/selinux/config
+ rpm -e setroubleshoot
+ rpm -e mcstrans
+#Investigate any unconfined daemons found during the audit action. They may need to have an existing security context assigned to them or a policy built for them.
+
+
+yum install libsemanage -y
+# edit /etc/motd
+chown root:root /etc/issue
+
+chmod 0644 /etc/issue
+#Only if GENOM is installed
+echo "user-db:user" >> /etc/dconf/profile/gdm
+echo "system-db:gdm" >> /etc/dconf/profile/gdm
+echo "file-db:/usr/share/gdm/greeter-dconf-defaults" >> /etc/dconf/profile/gdm
+echo "[org/gnome/login-screen]" >> /etc/dconf/db/gdm.d/01-banner-message
+echo "banner-message-enable=true" >> /etc/dconf/db/gdm.d/01-banner-message
+echo "banner-message-text='<banner message>'" >> /etc/dconf/db/gdm.d/01-banner-message
+
+
+
+
+
+chkconfig chargen-dgram off
+
+chkconfig chargen-stream off
+chkconfig daytime-dgram off
+
+chkconfig daytime-stream off
+chkconfig discard-dgram off
+
+chkconfig discard-stream off
+chkconfig echo-dgram off
+
+chkconfig echo-stream off
+chkconfig time-dgram off
+
+chkconfig time-stream off
+ yum remove rsh -y
+ chkconfig talk off
+yum remove telnet
+chkconfig tftp off
+ chkconfig rsync off
+ chkconfig xinetd off
+yum install ntp -y
+echo "restrict -4 default kod nomodify notrap nopeer noquery" >> /etc/ntp.conf
+echo "restrict -6 default kod nomodify notrap nopeer noquery" >> /etc/ntp.conf
+#echo "server <remote-server>" >> /etc/ntp.conf
+sed  -i 's/OPTIONS=.*/OPTIONS="-u ntp:ntp"/g' /etc/sysctl.conf
+yum install chrony -y
+#echo "server <remote-server>" >> /etc/chrony.conf
+sed  -i 's/OPTIONS=.*/OPTIONS="-u chrony"/g' /etc/sysconfig/chronyd
+yum remove -y xorg-x11*
+ chkconfig avahi-daemon off
+ chkconfig cups off
+ chkconfig dhcpd off
+ chkconfig slapd off
+chkconfig nfs off
+
+chkconfig rpcbind off
+chkconfig named off
+chkconfig vsftpd off
+chkconfig httpd off
+chkconfig dovecot off
+
+chkconfig smb off
+chkconfig squid off
+ chkconfig snmpd off
+echo "inet_interfaces = localhost" >> /etc/postfix/main.cf
+
+service postfix restart
+chkconfig ypserv off
+yum remove -y ypbind
+yum remove -y rsh
+yum remove -y talk
+yum remove -y telnet
+yum remove -y openldap-clients
+sed  -i 's/net.ipv4.ip_forward.*/net.ipv4.ip_forward = 0/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.ip_forward=0
+
+sysctl -w net.ipv4.route.flush=1
+
+sed  -i 's/net.ipv4.conf.all.send_redirects.*/net.ipv4.conf.all.send_redirects = 0/g' /etc/sysctl.conf
+sed -i  's/net.ipv4.conf.default.send_redirects.*/net.ipv4.conf.default.send_redirects = 0/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.conf.all.send_redirects=0
+
+sysctl -w net.ipv4.conf.default.send_redirects=0
+
+sysctl -w net.ipv4.route.flush=1
+
+
+
+sed  -i 's/net.ipv4.conf.all.accept_source_route.*/net.ipv4.conf.all.accept_source_route = 0/g' /etc/sysctl.conf
+
+sed -i  's/net.ipv4.conf.default.accept_source_route.*/net.ipv4.conf.default.accept_source_route = 0/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.conf.all.accept_source_route=0
+
+ sysctl -w net.ipv4.conf.default.accept_source_route=0
+
+sysctl -w net.ipv4.route.flush=1
+
+
+
+sed  -i 's/net.ipv4.conf.all.accept_redirects.*/net.ipv4.conf.all.accept_redirects = 0/g' /etc/sysctl.conf
+
+sed -i  's/net.ipv4.conf.default.accept_redirects.*/net.ipv4.conf.default.accept_redirects = 0/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.conf.all.accept_redirects=0
+
+sysctl -w net.ipv4.conf.default.accept_redirects=0
+
+sysctl -w net.ipv4.route.flush=1
+
+
+
+sed  -i 's/net.ipv4.conf.all.secure_redirects.*/net.ipv4.conf.all.secure_redirects = 0/g' /etc/sysctl.conf
+
+sed -i  's/net.ipv4.conf.default.secure_redirects.*/net.ipv4.conf.default.secure_redirects = 0/g' /etc/sysctl.conf
+sysctl -w net.ipv4.conf.all.secure_redirects=0
+
+sysctl -w net.ipv4.conf.default.secure_redirects=0
+
+sysctl -w net.ipv4.route.flush=1
+
+
+
+sed  -i 's/net.ipv4.conf.all.log_martians.*/net.ipv4.conf.all.log_martians = 1/g' /etc/sysctl.conf
+
+sed -i  's/net.ipv4.conf.default.log_martians.*/net.ipv4.conf.default.log_martians = 1/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.conf.all.log_martians=1
+
+sysctl -w net.ipv4.conf.default.log_martians=1
+
+sysctl -w net.ipv4.route.flush=1
+
+
+
+sed  -i 's/net.ipv4.icmp_echo_ignore_broadcasts.*/net.ipv4.icmp_echo_ignore_broadcasts = 1/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=1
+
+ sysctl -w net.ipv4.route.flush=1
+
+sed  -i 's/net.ipv4.icmp_ignore_bogus_error_responses.*/net.ipv4.icmp_ignore_bogus_error_responses = 1/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.icmp_ignore_bogus_error_responses=1
+
+sysctl -w net.ipv4.route.flush=1
+
+sed  -i 's/net.ipv4.conf.all.rp_filter.*/net.ipv4.conf.all.rp_filter = 1/g' /etc/sysctl.conf
+
+sed -i  's/net.ipv4.conf.default.rp_filter.*/net.ipv4.conf.default.rp_filter = 1/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.conf.all.rp_filter=1
+
+sysctl -w net.ipv4.conf.default.rp_filter=1
+
+ sysctl -w net.ipv4.route.flush=1
+
+
+
+sed  -i 's/net.ipv4.tcp_syncookies.*/net.ipv4.tcp_syncookies = 1/g' /etc/sysctl.conf
+
+sysctl -w net.ipv4.tcp_syncookies=1
+
+sysctl -w net.ipv4.route.flush=1
+
+ yum install tcp_wrappers -y
+# echo "ALL: <net>/<mask>, <net>/<mask>, ..." >/etc/hosts.allow
+# echo "ALL: ALL" >> /etc/hosts.deny
+chown root:root /etc/hosts.allow
+chmod 644 /etc/hosts.allow
+chown root:root /etc/hosts.deny
+chmod 644 /etc/hosts.deny
+ yum install iptables -y
+#iptables -P INPUT DROP
+#iptables -P OUTPUT DROP
+
+#iptables -P FORWARD DROP
+
+
+#iptables -A INPUT -i lo -j ACCEPT
+
+#iptables -A OUTPUT -o lo -j ACCEPT
+
+#iptables -A INPUT -s 127.0.0.0/8 -j DROP
+
+
+
+
+
+
+
+#iptables -A INPUT -p <protocol> --dport <port> -m state --state NEW -j ACCEPT
+sed  -i 's/space_left_action.*/space_left_action = email/g' /etc/audit/auditd.conf
+
+sed -i  's/action_mail_acct.*/action_mail_acct = root/g' /etc/audit/auditd.conf
+
+sed -i  's/admin_space_left_action.*/admin_space_left_action = halt/g' /etc/audit/auditd.conf
+
+
+sed  -i 's/max_log_file_action.*/max_log_file_action = keep_logs/g' /etc/audit/auditd.conf
+chkconfig auditd on
+sed -i  's/^kernel.*/&audit=1/'  /boot/grub/grub.conf
+#32 bit
+
+echo "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S clock_settime -k time-change" >> /etc/audit/audit.rules
+
+echo "-w /etc/localtime -p wa -k time-change" >> /etc/audit/audit.rules
+
+#64 bit
+echo "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b64 -S clock_settime -k time-change" >> /etc/audit/audit.rules
+echo "-a always,exit -F arch=b32 -S clock_settime -k time-change" >> /etc/audit/audit.rules
+
+echo "-w /etc/localtime -p wa -k time-change" >> /etc/audit/audit.rules
+
+
+
+
+echo "-w /etc/group -p wa -k identity" >> /etc/audit/audit.rules
+
+echo "-w /etc/passwd -p wa -k identity" >> /etc/audit/audit.rules
+
+echo "-w /etc/gshadow -p wa -k identity" >> /etc/audit/audit.rules
+
+echo "-w /etc/shadow -p wa -k identity" >> /etc/audit/audit.rules
+
+echo "-w /etc/security/opasswd -p wa -k identity" >> /etc/audit/audit.rules
+
+
+
+
+#32 bit
+
+echo "-a always,exit -F arch=b32 -S sethostname -S setdomainname -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/issue -p wa -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/issue.net -p wa -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/hosts -p wa -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/sysconfig/network -p wa -k system-locale" >> /etc/audit/audit.rules
+#64 bit
+
+echo "-a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S sethostname -S setdomainname -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/issue -p wa -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/issue.net -p wa -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/hosts -p wa -k system-locale" >> /etc/audit/audit.rules
+
+echo "-w /etc/sysconfig/network -p wa -k system-locale" >> /etc/audit/audit.rules
+
+
+
+
+
+
+echo "-w /etc/selinux/ -p wa -k MAC-policy" >> /etc/audit/audit.rules
+
+echo "-w /var/log/lastlog -p wa -k logins" >> /etc/audit/audit.rules
+echo "-w /var/run/faillock/ -p wa -k logins" >> /etc/audit/audit.rules
+
+echo "-w /var/run/utmp -p wa -k session" >> /etc/audit/audit.rules
+
+echo "-w /var/log/wtmp -p wa -k session" >> /etc/audit/audit.rules
+
+echo "-w /var/log/btmp -p wa -k session" >> /etc/audit/audit.rules
+
+
+
+
+#32 bit
+
+echo "-a always,exit -F arch=b32 -S chmod -S fchmod -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S chown -S fchown -S fchownat -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S setxattr -S lsetxattr -S fsetxattr -S removexattr -Slremovexattr -S fremovexattr -F auid>=500 -F  auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+#64 bit
+
+echo "-a always,exit -F arch=b64 -S chmod -S fchmod -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S chmod -S fchmod -S fchmodat -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b64 -S chown -S fchown -S fchownat -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S chown -S fchown -S fchownat -S lchown -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b64 -S setxattr -S lsetxattr -S fsetxattr -S removexattr -S lremovexattr -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S setxattr -S lsetxattr -S fsetxattr -S removexattr -S lremovexattr -S fremovexattr -F auid>=500 -F auid!=4294967295 -k perm_mod" >> /etc/audit/audit.rules
+
+
+
+
+
+#32 bit
+
+echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access" >> /etc/audit/audit.rules
+
+#64 bit
+
+echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access" >> /etc/audit/audit.rules
+
+
+
+
+# find <partition> -xdev \( -perm -4000 -o -perm -2000 \) -type f | awk '{print "-a always,exit -F path=" $1 " -F perm=x -F auid>=500 -F auid!=4294967295 -k privileged"}'
+# Add all resulting lines to the /etc/audit/audit.rules file.
+#32 bit
+
+echo "-a always,exit -F arch=b32 -S mount -F auid>=500 -F auid!=4294967295 -k mounts" >> /etc/audit/audit.rules
+
+#64 bit
+
+echo "-a always,exit -F arch=b64 -S mount -F auid>=500 -F auid!=4294967295 -k mounts" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S mount -F auid>=500 -F auid!=4294967295 -k mounts" >> /etc/audit/audit.rules
+
+#32 bit
+
+echo "-a always,exit -F arch=b32 -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" >> /etc/audit/audit.rules
+
+#64 bit
+
+echo "-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" >> /etc/audit/audit.rules
+
+echo "-a always,exit -F arch=b32 -S unlink -S unlinkat -S rename -S renameat -F auid>=500 -F auid!=4294967295 -k delete" >> /etc/audit/audit.rules
+
+echo "-w /etc/sudoers -p wa -k scope" >> /etc/audit/audit.rules
+echo "-w /etc/sudoers.d -p wa -k scope" >> /etc/audit/audit.rules
+
+echo "-w /var/log/sudo.log -p wa -k actions" >> /etc/audit/audit.rules
+
+#32 bit
+
+echo "-w /sbin/insmod -p x -k modules" >> /etc/audit/audit.rules
+
+echo "-w /sbin/rmmod -p x -k modules" >> /etc/audit/audit.rules
+
+echo "-w /sbin/modprobe -p x -k modules" >> /etc/audit/audit.rules
+
+echo "-a always,exit arch=b32 -S init_module -S delete_module -k modules" >> /etc/audit/audit.rules
+
+#64 bit
+
+echo "-w /sbin/insmod -p x -k modules" >> /etc/audit/audit.rules
+
+echo "-w /sbin/rmmod -p x -k modules" >> /etc/audit/audit.rules
+
+echo "-w /sbin/modprobe -p x -k modules" >> /etc/audit/audit.rules
+
+echo "-a always,exit arch=b64 -S init_module -S delete_module -k modules" >> /etc/audit/audit.rules
+
+
+
+echo "-e 2" >> /etc/audit/audit.rules
+chkconfig rsyslog on
+echo "$FileCreateMode 0640" >> /etc/rsyslog.conf
+#where logfile.example.com is the name of your central log host
+echo "*.* @@loghost.example.com" >> /etc/rsyslog.conf
+pkill -HUP rsyslogd
+#chkconfig iptables on
+# edit file /etc/syslog-ng/syslog-ng.conf, set perm... options { chain_hostnames(off); flush_lines(0); perm(0640); stats_freq(3600); threaded(yes); };
+yum install rsyslog -y
+
+yum install syslog-ng -y
+find /var/log -type f -exec chmod g-wx,o-rwx {} +
+chkconfig crond on
+ chown root:root /etc/crontab
+chmod og-rwx /etc/crontab
+ chown root:root /etc/cron.hourly
+ chmod og-rwx /etc/cron.hourly
+chown root:root /etc/cron.daily
+chmod og-rwx /etc/cron.daily
+ chown root:root /etc/cron.weekly
+ chmod og-rwx /etc/cron.weekly
+ chown root:root /etc/cron.monthly
+chmod og-rwx /etc/cron.monthly
+ chown root:root /etc/cron.d
+ chmod og-rwx /etc/cron.d
+ rm -f /etc/cron.deny
+
+rm -f /etc/at.deny
+
+touch /etc/cron.allow
+
+touch /etc/at.allow
+
+ chmod og-rwx /etc/cron.allow
+
+ chmod og-rwx /etc/at.allow
+
+ chown root:root /etc/cron.allow
+ chown root:root /etc/at.allow
+
+
+
+
+chown root:root /etc/ssh/sshd_config
+
+chmod og-rwx /etc/ssh/sshd_config
+sed -i  's/^Protocol.*/Protocol 2/g' /etc/ssh/sshd_config
+sed -i 's/.*LogLevel.*/LogLevel INFO/g' /etc/ssh/sshd_config
+sed -i 's/X11Forwarding.*/X11Forwarding no/g' /etc/ssh/sshd_config
+sed -i 's/.*MaxAuthTries.*/MaxAuthTries 4/g' /etc/ssh/sshd_config
+sed -i 's/.*IgnoreRhosts.*/IgnoreRhosts yes/g' /etc/ssh/sshd_config
+sed -i 's/.*HostbasedAuthentication.*/HostbasedAuthentication no/g' /etc/ssh/sshd_config
+sed -i 's/PermitRootLogin.*/PermitRootLogin no/g' /etc/ssh/sshd_config
+sed -i 's/.*PermitEmptyPasswords.*/PermitEmptyPasswords no/g' /etc/ssh/sshd_config
+sed -i 's/.*PermitUserEnvironment.*/PermitUserEnvironment no/g' /etc/ssh/sshd_config
+echo "MACs hmac-sha2-512,hmac-sha2-256" >> /etc/ssh/sshd_config
+sed -i 's/.*ClientAliveInterval.*/ClientAliveInterval 300/g' /etc/ssh/sshd_config
+
+sed -i 's/.*ClientAliveCountMax.*/ClientAliveCountMax 0/g' /etc/ssh/sshd_config
+
+sed -i 's/.*LoginGraceTime.*/LoginGraceTime 60/g' /etc/ssh/sshd_config
+#Edit file /etc/ssh/sshd_config As per SHL Policy
+#AllowUsers <userlist>
+#AllowGroups <grouplist>
+#DenyUsers <userlist>
+#DenyGroups <grouplist>
+
+
+
+echo "Banner /etc/issue.net" >> /etc/ssh/sshd_config
+echo "password requisite pam_cracklib.so try_first_pass retry=3 minlen=14 dcredit=-1 ucredit=-1 ocredit=-1 lcredit=-1" >> /etc/pam.d/password-auth
+
+echo "password requisite pam_cracklib.so try_first_pass retry=3 minlen=14 dcredit=-1 ucredit=-1 ocredit=-1 lcredit=-1" >> /etc/pam.d/system-auth
+echo "auth required pam_faillock.so preauth audit silent deny=5 unlock_time=900" >> /etc/pam.d/password-auth
+
+echo "auth [success=1 default=bad] pam_unix.so" >> /etc/pam.d/password-auth
+
+echo "auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900" >> /etc/pam.d/password-auth
+
+echo "auth sufficient pam_faillock.so authsucc audit deny=5 unlock_time=900" >> /etc/pam.d/password-auth
+
+
+echo "auth required pam_faillock.so preauth audit silent deny=5 unlock_time=900" >> /etc/pam.d/system-auth
+
+echo "auth [success=1 default=bad] pam_unix.so" >> /etc/pam.d/system-auth
+
+echo "auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900" >> /etc/pam.d/system-auth
+
+echo "auth sufficient pam_faillock.so authsucc audit deny=5 unlock_time=900" >> /etc/pam.d/system-auth
+echo "password sufficient pam_unix.so remember=5" >> /etc/pam.d/password-auth
+
+echo "password sufficient pam_unix.so remember=5" >> /etc/pam.d/system-auth
+echo "password sufficient pam_unix.so sha512" >> /etc/pam.d/password-auth
+
+echo "password sufficient pam_unix.so sha512" >> /etc/pam.d/system-auth
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS 365/g' /etc/login.defs
+
+for i in $(awk -F':' '{ print $1}' /etc/passwd); do chage --maxdays 365 $i; done;
+sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS 7/g' /etc/login.defs
+
+for i in $(awk -F':' '{ print $1}' /etc/passwd); do chage --mindays 7 $i; done;
+sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE 7/g' /etc/login.defs
+
+for i in $(awk -F':' '{ print $1}' /etc/passwd); do chage --warndays 7 $i; done;
+useradd -D -f 30
+
+for i in $(awk -F':' '{ print $1}' /etc/passwd); do chage --inactive 30 $i; done;
+for i in $(awk -F':' '{ print $1}' /etc/passwd); do chage -d 0 $i; done;
+for user in $(awk -F':' '{print $1 }' /etc/passwd); do
+ if [ $user != "root" ]; then
+usermod -L $user
+if [ $user != "sync" ] && [ $user != "shutdown" ] && [ $user != "halt" ]; then
+usermod -s /sbin/nologin $user
+fi
+fi
+done
+ usermod -g 0 root
+sed -i 's/umask.*/umask 027/g' /etc/bashrc
+
+sed -i 's/umask.*/umask 027/g' /etc/profile
+
+echo "TMOUT=600" >> /etc/bashrc
+
+echo "TMOUT=600" >> /etc/profile
+
+echo "auth required pam_wheel.so use_uid" >> /etc/pam.d/su
+
+#in file /etc/group    wheel:x:10:root,<user list>
+
+chown root:root /etc/passwd
+
+chmod 644 /etc/passwd
+chown root:root /etc/shadow
+
+chmod 000 /etc/shadow
+chown root:root /etc/group
+
+chmod 644 /etc/group
+chown root:root /etc/gshadow
+
+chmod 000 /etc/gshadow
+chown root:root /etc/passwd-
+
+chmod 600 /etc/passwd-
+chown root:root /etc/shadow-
+
+chmod 600 /etc/shadow-
+chown root:root /etc/group-
+
+chmod 600 /etc/group-
+chown root:root /etc/gshadow-
+
+chmod 600 /etc/gshadow-
+#Removing write access for the "other" category (chmod o-w <filename>) is advisable, but
+
+#always consult relevant vendor documentation to avoid breaking any application
+#dependencies on a given file.
+
+#Locate files that are owned by users or groups not listed in the system configuration files,
+#and reset the ownership of these files to some active user on the system as appropriate
+#chown user
+
+#Locate files that are owned by users or groups not listed in the system configuration files,
+#and reset the ownership of these files to some active user on the system as appropriate.
+#chown :group
+
+#If any accounts in the /etc/shadow file do not have a password, run the following
+#command to lock the account until it can be determined why it does not have a password:
+#passwd -l <username>
+# Remove any legacy '+' entries from /etc/passwd if they exist.
+# Remove any legacy '+' entries from /etc/shadow if they exist.
+# Remove any legacy '+' entries from /etc/group if they exist
+# Remove any users other than root with UID 0 or assign them a new UID if appropriate.
+# Correct or justify any items discovered in the Audit step.
+
+#If any users' home directories do not exist, create them and make sure the respective user
+#owns the directory. Users without an assigned home directory should be removed or
+#assigned a home directory as appropriate.
+#mkdir -p /home/username
+#chown username:usergroup /home/username
+#usermod -d /home/username username
+
+
+#chmod 750 /home/username
+
+
+#chown username:usergroup /home/username
+
+
+# chmod og-w /home/user/.dotfile
+
+
+
+
+# rm -f /home/user/.forward
+# rm -f /home/user/.netrc
+# chmod og-w /home/user/.netrc
+# rm -f /home/user/.rhosts
+
+#Analyze the output of the Audit step above and perform the appropriate action to correct any discrepancies found
+#add group to /etc/group groupname:x:gid:
+#Based on the results of the audit script, establish unique UIDs and review all files owned by
+#the shared UIDs to determine which UID they are supposed to belong to.
+#ls -n /home/user
+# usermod -u UID user
+#Based on the results of the audit script, establish unique GIDs and review all files owned by
+#the shared GID to determine which group they are supposed to belong to.
+#ls -n /home/user
+ # groupmod -g GID user
+#Based on the results of the audit script, establish unique user names for the users. File
+#ownerships will automatically reflect the change as long as the users have unique UIDs.
+#usermod -l newUsername oldUsername
+
+#Based on the results of the audit script, establish unique names for the user groups. File group ownerships will automatically reflect the #change as long as the groups have unique
+#GIDs.
+#groupmod -n newgroup oldgroup
